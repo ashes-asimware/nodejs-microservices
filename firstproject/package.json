@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build": "node -r ts-node/register src/app.ts",
+    "start": "node -r ts-node/register src/app.ts"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
