@@ -1,7 +1,7 @@
 {
   "name": "asyncprogramming",
   "version": "1.0.0",
-  "description": "",
+  "description": "Code to demonstrate asynchronous programming in Node.js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,8 +18,10 @@
     "@types/node": "^25.5.0",
     "@types/nodemon": "^1.19.6",
     "nodemon": "^3.1.14",
-    "typescript": "^5.2.2",
     "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
     "express": "^5.2.1"
   }
 }
