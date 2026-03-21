@@ -1,0 +1,20 @@
+{
+  "name": "best-practices",
+  "version": "1.0.0",
+  "description": "A sample project demonstrating best practices for Node.js microservices.",
+  "main": "dist/app.js",
+  "scripts": {
+    "format": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx",
+    "build": "tsc",
+    "start": "node dist/app.js"
+  },
+  "dependencies": {
+    "node": "^25.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1"
+  }
+}
