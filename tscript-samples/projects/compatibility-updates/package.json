@@ -1,0 +1,22 @@
+{
+  "name": "compatibility-updates",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "express": "^5.2.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "node": "^25.8.1"
+  }
+}
