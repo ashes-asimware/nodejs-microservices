@@ -1,0 +1,16 @@
+{
+  "name": "test-microservices",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2"
+  }
+}
