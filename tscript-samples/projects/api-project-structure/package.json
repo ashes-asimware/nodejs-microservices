@@ -1,0 +1,28 @@
+{
+  "name": "api-project-structure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.ts",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "ts-node src/server.ts"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mysql2": "^3.20.0",
+    "node": "^25.8.2",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.28",
+    "typescript": "^6.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "@types/typescript": "^0.4.29"
+  }
+}
