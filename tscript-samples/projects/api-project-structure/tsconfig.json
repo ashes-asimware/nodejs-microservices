@@ -42,5 +42,8 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    // For TypeORM
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }
