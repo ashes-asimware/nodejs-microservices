@@ -1,17 +1,14 @@
 import jwt from 'jsonwebtoken';
 import app from '../app'
 import { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 
 const secret = process.env.JWT_SECRET;
 
-function generateJWT(user: { id: string; role: string }) {
-    return jwt.sign({ id: user.id, role: user.role }, secret!, { expiresIn: '1h' });
-}
-
-app.post('/login', async(req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const token = generateJWT({ id: 'user_id', role: 'user_role' });
-    res.json({ token });
+const profileRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests from this IP, please try again later.'
 });
 
 function authenticateToken(req: Request, res: Response, next: Function) {
@@ -25,6 +22,17 @@ function authenticateToken(req: Request, res: Response, next: Function) {
     });
 }
 
-app.get('/profile', authenticateToken, (req: Request, res: Response) => {
+function generateJWT(user: { id: string; role: string }) {
+    return jwt.sign({ id: user.id, role: user.role }, secret!, { expiresIn: '1h' });
+}
+
+app.post('/login', async(req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const token = generateJWT({ id: 'user_id', role: 'user_role' });
+    res.json({ token });
+});
+
+
+app.get('/profile', profileRateLimiter, authenticateToken, (req: Request, res: Response) => {
     res.json({ message: 'This is a protected route', user: req.body.user });
 });
