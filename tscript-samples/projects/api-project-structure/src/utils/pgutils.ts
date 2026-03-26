@@ -1,10 +1,18 @@
 import {Pool} from "pg";
 
+function getRequiredEnv(varName: string): string {
+    const value = process.env[varName];
+    if (!value) {
+        throw new Error(`Environment variable ${varName} is required for database configuration.`);
+    }
+    return value;
+}
+
 const pool = new Pool({
-    user: process.env.DB_USER || 'myuser',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'mydb',
-    password: process.env.DB_PASSWORD || 'mypassword',
+    user: getRequiredEnv('DB_USER'),
+    host: getRequiredEnv('DB_HOST'),
+    database: getRequiredEnv('DB_NAME'),
+    password: getRequiredEnv('DB_PASSWORD'),
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
 });
 
