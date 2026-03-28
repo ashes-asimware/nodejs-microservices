@@ -28,6 +28,6 @@
     "@types/pg": "^8.20.0",
     "@types/typescript": "^0.4.29",
     "dotenv": "^17.3.1",
-    "prisma": "^7.5.0"
+    "prisma": "^7.6.0"
   }
 }
