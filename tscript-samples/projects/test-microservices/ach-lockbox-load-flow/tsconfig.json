@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@ach-lockbox/event-types": ["shared/event-types/src"],
+      "@ach-lockbox/auth-helpers": ["shared/auth-helpers/src"],
+      "@ach-lockbox/validation": ["shared/validation/src"],
+      "@ach-lockbox/logger": ["shared/logger/src"],
+      "@ach-lockbox/error-taxonomy": ["shared/error-taxonomy/src"],
+      "@ach-lockbox/kafka": ["shared/kafka/src"]
+    },
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "lib": ["es2020"],
+    "skipLibCheck": true,
+    "composite": true
+  },
+  "include": ["services", "shared"],
+  "exclude": ["node_modules", "dist"]
+}

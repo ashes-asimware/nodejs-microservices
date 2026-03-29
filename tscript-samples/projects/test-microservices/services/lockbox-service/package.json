@@ -1,0 +1,30 @@
+{
+  "name": "@ach-lockbox/lockbox-service",
+  "version": "1.0.0",
+  "description": "Lockbox ingestion service for processing check images and extracting payment data",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@ach-lockbox/error-taxonomy": "^1.0.0",
+    "@ach-lockbox/event-types": "^1.0.0",
+    "@ach-lockbox/logger": "^1.0.0",
+    "@ach-lockbox/validation": "^1.0.0",
+    "express": "^4.18.2",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.5",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.0"
+  }
+}

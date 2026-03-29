@@ -1,0 +1,19 @@
+{
+  "name": "consumer-service",
+  "version": "1.0.0",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "ts-node -r dotenv/config src/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "dotenv": "^16.6.1",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prisma": "^6.0.0",
+    "ts-node": "^10.9.2"
+  }
+}
