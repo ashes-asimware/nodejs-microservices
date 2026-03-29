@@ -7,9 +7,9 @@
  */
 
 import express, { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as isUuid } from 'uuid';
 import { createLogger, createLogMiddleware } from '@ach-lockbox/logger';
-import { asyncHandler, createErrorHandlerMiddleware, NotFoundError } from '@ach-lockbox/error-taxonomy';
+import { asyncHandler, createErrorHandlerMiddleware, NotFoundError, throwValidationError } from '@ach-lockbox/error-taxonomy';
 
 const SERVICE_NAME = 'factor-simulator';
 const PORT = Number(process.env.PORT || 3011);
@@ -61,6 +61,9 @@ app.post(
     if (!assignmentId) {
       throw new NotFoundError('assignmentId is required in the request body');
     }
+    if (!isUuid(assignmentId)) {
+      throwValidationError('assignmentId must be a valid UUID');
+    }
 
     const advanceAmount: number = req.body?.advanceAmount ?? 207000;   // cents
     const discountAmount: number = req.body?.discountAmount ?? 4140;   // 2% fee in cents
@@ -85,6 +88,9 @@ app.post(
     const assignmentId = req.body?.assignmentId;
     if (!assignmentId) {
       throw new NotFoundError('assignmentId is required in the request body');
+    }
+    if (!isUuid(assignmentId)) {
+      throwValidationError('assignmentId must be a valid UUID');
     }
 
     const settlementAmount: number = req.body?.settlementAmount ?? 230000;  // cents

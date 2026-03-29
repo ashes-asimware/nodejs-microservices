@@ -8,9 +8,9 @@
  */
 
 import express, { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as isUuid } from 'uuid';
 import { createLogger, createLogMiddleware } from '@ach-lockbox/logger';
-import { asyncHandler, createErrorHandlerMiddleware, NotFoundError } from '@ach-lockbox/error-taxonomy';
+import { asyncHandler, createErrorHandlerMiddleware, NotFoundError, throwValidationError } from '@ach-lockbox/error-taxonomy';
 
 const SERVICE_NAME = 'bank-simulator';
 const PORT = Number(process.env.PORT || 3013);
@@ -62,6 +62,9 @@ app.post(
     const paymentId = req.body?.paymentId;
     if (!paymentId) {
       throw new NotFoundError('paymentId is required in the request body');
+    }
+    if (!isUuid(paymentId)) {
+      throwValidationError('paymentId must be a valid UUID');
     }
 
     const payload = {

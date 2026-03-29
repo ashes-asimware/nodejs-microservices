@@ -8,9 +8,9 @@
  */
 
 import express, { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as isUuid } from 'uuid';
 import { createLogger, createLogMiddleware } from '@ach-lockbox/logger';
-import { asyncHandler, createErrorHandlerMiddleware, NotFoundError } from '@ach-lockbox/error-taxonomy';
+import { asyncHandler, createErrorHandlerMiddleware, NotFoundError, throwValidationError } from '@ach-lockbox/error-taxonomy';
 
 const SERVICE_NAME = 'broker-simulator';
 const PORT = Number(process.env.PORT || 3012);
@@ -81,6 +81,9 @@ app.post(
     if (!paymentId) {
       throw new NotFoundError('paymentId is required in the request body');
     }
+    if (!isUuid(paymentId)) {
+      throwValidationError('paymentId must be a valid UUID');
+    }
 
     const expectedSettlementDate = new Date();
     expectedSettlementDate.setDate(expectedSettlementDate.getDate() + 2);
@@ -107,6 +110,9 @@ app.post(
     const advanceId = req.body?.advanceId;
     if (!advanceId) {
       throw new NotFoundError('advanceId is required in the request body');
+    }
+    if (!isUuid(advanceId)) {
+      throwValidationError('advanceId must be a valid UUID');
     }
 
     const chargeDate = new Date();
