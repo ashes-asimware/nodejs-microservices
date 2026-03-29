@@ -51,6 +51,7 @@ Phase 6 documentation delivery has been started with a full operational and arch
 - docs/security-model.md
 - docs/failure-recovery-playbook.md
 - docs/production-hardening-recommendations.md
+- docs/reconciliation-serverless-cutover.md
 
 ## Technology Stack
 

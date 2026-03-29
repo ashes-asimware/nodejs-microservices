@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import {
   createHttpMetricsMiddleware,
@@ -31,6 +31,13 @@ import { createKafkaClient, KafkaProducer } from '@ach-lockbox/kafka';
 
 const SERVICE_NAME = 'payment-service';
 const PORT = Number(process.env.PORT || 3023);
+const RATE_LIMIT_ENABLED = String(process.env.RATE_LIMIT_ENABLED || 'true').toLowerCase() === 'true';
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60000);
+const RATE_LIMIT_MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS || 120);
+const RATE_LIMIT_EXEMPT_PATHS = String(process.env.RATE_LIMIT_EXEMPT_PATHS || '/health,/metrics')
+  .split(',')
+  .map((path) => path.trim())
+  .filter((path) => path.length > 0);
 
 const logger = createLogger({
   serviceName: SERVICE_NAME,
@@ -42,6 +49,111 @@ app.use(express.json());
 app.use(createLogMiddleware({ serviceName: SERVICE_NAME }));
 const metricsCollector = new HttpMetricsCollector(SERVICE_NAME);
 app.use(createHttpMetricsMiddleware(metricsCollector));
+
+interface RateLimitEntry {
+  count: number;
+  startedAt: number;
+}
+
+interface RateLimitResult {
+  limited: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+let rateLimitRejectedCount = 0;
+
+function getClientKey(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.length > 0) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  return req.socket.remoteAddress || 'unknown';
+}
+
+function isRateLimitExempt(req: Request): boolean {
+  const normalizedPath = req.path || '/';
+  return RATE_LIMIT_EXEMPT_PATHS.some((exemptPath) => normalizedPath === exemptPath || normalizedPath.startsWith(`${exemptPath}/`));
+}
+
+function enforceRateLimit(req: Request): RateLimitResult {
+  const resetAt = Date.now() + RATE_LIMIT_WINDOW_MS;
+  if (!RATE_LIMIT_ENABLED || isRateLimitExempt(req)) {
+    return {
+      limited: false,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      remaining: RATE_LIMIT_MAX_REQUESTS,
+      resetAt,
+    };
+  }
+
+  const now = Date.now();
+  const key = getClientKey(req);
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || now - entry.startedAt > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { count: 1, startedAt: now });
+    return {
+      limited: false,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      remaining: RATE_LIMIT_MAX_REQUESTS - 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    };
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      limited: true,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      remaining: 0,
+      resetAt: entry.startedAt + RATE_LIMIT_WINDOW_MS,
+    };
+  }
+
+  entry.count += 1;
+  rateLimitStore.set(key, entry);
+
+  return {
+    limited: false,
+    limit: RATE_LIMIT_MAX_REQUESTS,
+    remaining: RATE_LIMIT_MAX_REQUESTS - entry.count,
+    resetAt: entry.startedAt + RATE_LIMIT_WINDOW_MS,
+  };
+}
+
+const rateLimitCleanupIntervalMs = Math.max(5000, Math.floor(RATE_LIMIT_WINDOW_MS / 2));
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now - value.startedAt > RATE_LIMIT_WINDOW_MS) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, rateLimitCleanupIntervalMs).unref();
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const result = enforceRateLimit(req);
+
+  if (!isRateLimitExempt(req)) {
+    res.setHeader('x-ratelimit-limit', String(result.limit));
+    res.setHeader('x-ratelimit-remaining', String(Math.max(result.remaining, 0)));
+    res.setHeader('x-ratelimit-reset', String(Math.floor(result.resetAt / 1000)));
+  }
+
+  if (result.limited) {
+    rateLimitRejectedCount += 1;
+    res.status(429).json({
+      error: 'TOO_MANY_REQUESTS',
+      message: 'Rate limit exceeded',
+    });
+    return;
+  }
+
+  next();
+});
 
 type PaymentStatus = 'AUTHORIZED' | 'INITIATED' | 'SETTLED' | 'RECEIVED';
 
@@ -158,6 +270,12 @@ app.get('/health', (_req: Request, res: Response) => {
     service: SERVICE_NAME,
     status: 'ok',
     kafkaReady,
+    rateLimit: {
+      enabled: RATE_LIMIT_ENABLED,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+      maxRequests: RATE_LIMIT_MAX_REQUESTS,
+      exemptPaths: RATE_LIMIT_EXEMPT_PATHS,
+    },
     timestamp: new Date().toISOString(),
   });
 });
@@ -167,6 +285,8 @@ app.get('/metrics', (_req: Request, res: Response) => {
     ...metricsCollector.snapshot(),
     domainState: {
       totalPayments: payments.size,
+      activeRateLimitKeys: rateLimitStore.size,
+      rateLimitRejectedCount,
     },
   });
 });
