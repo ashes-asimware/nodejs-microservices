@@ -24,6 +24,7 @@ import {
   createEventEnvelope,
   PaymentAuthorizedPayload,
   PaymentInitiatedPayload,
+  PaymentSettledPayload,
   PaymentReceivedPayload,
   TOPICS,
 } from '@ach-lockbox/event-types';
@@ -239,6 +240,32 @@ async function publishInitiated(payment: PaymentRecord): Promise<void> {
   await producer.publishEvent(TOPICS.PAYMENT_INITIATED, event, payment.id);
 }
 
+async function publishSettled(payment: PaymentRecord, confirmationNumber: string, bankReferenceNumber: string): Promise<void> {
+  if (!kafkaReady || !payment.carrierId) {
+    return;
+  }
+
+  const payload: PaymentSettledPayload = {
+    paymentId: payment.id,
+    carrierId: payment.carrierId,
+    amount: payment.amount,
+    settlementDate: payment.updatedAt,
+    confirmationNumber,
+    bankReferenceNumber,
+  };
+
+  const event = createEventEnvelope(
+    SERVICE_NAME,
+    TOPICS.PAYMENT_SETTLED,
+    payload,
+    payment.id,
+    'system',
+    { correlationId: uuidv4() }
+  );
+
+  await producer.publishEvent(TOPICS.PAYMENT_SETTLED, event, payment.id);
+}
+
 async function publishReceived(payment: PaymentRecord): Promise<void> {
   if (!kafkaReady || !payment.customerId || !payment.lockboxFileId) {
     return;
@@ -357,6 +384,42 @@ app.post(
     } catch (error) {
       logger.warn('Payment initiated but event publish failed', {
         paymentId: payment.id,
+        error: (error as Error).message,
+      });
+    }
+
+    res.status(200).json(payment);
+  })
+);
+
+// Activity 8: Bank Settlement of Outbound Payment — bank confirms ACH/EFT settled
+app.post(
+  '/payments/:id/settle',
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = String(req.params.id);
+    const payment = payments.get(id);
+    if (!payment) {
+      throw new NotFoundError(`Payment not found: ${id}`);
+    }
+
+    const confirmationNumber: string =
+      typeof req.body?.confirmationNumber === 'string'
+        ? req.body.confirmationNumber
+        : `CONF-${id.substring(0, 8).toUpperCase()}`;
+    const bankReferenceNumber: string =
+      typeof req.body?.bankReferenceNumber === 'string'
+        ? req.body.bankReferenceNumber
+        : `BANK-${id.substring(0, 8).toUpperCase()}`;
+
+    payment.status = 'SETTLED';
+    payment.updatedAt = new Date();
+    payments.set(payment.id, payment);
+
+    try {
+      await publishSettled(payment, confirmationNumber, bankReferenceNumber);
+    } catch (error) {
+      logger.warn('Payment settled but event publish failed', {
+        paymentId: id,
         error: (error as Error).message,
       });
     }
