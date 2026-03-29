@@ -1,0 +1,23 @@
+{
+  "name": "@ach-lockbox/kafka",
+  "version": "1.0.0",
+  "description": "Kafka client factory, producer/consumer wrappers, DLQ handling, and retry policies",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": ["kafka", "messaging", "event-streaming"],
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "@ach-lockbox/logger": "^1.0.0",
+    "@ach-lockbox/event-types": "^1.0.0",
+    "@ach-lockbox/error-taxonomy": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.0"
+  }
+}

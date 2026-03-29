@@ -1,16 +1,51 @@
 {
   "name": "test-microservices",
   "private": true,
+  "version": "1.0.0",
+  "description": "ACH Lockbox Microservices Platform for payment reconciliation and event-sourced ledger",
   "workspaces": [
-    "services/*",
-    "shared/*"
+    "services/api-gateway",
+    "services/carrier-simulator",
+    "services/factor-simulator",
+    "services/broker-simulator",
+    "services/bank-simulator",
+    "services/load-service",
+    "services/invoice-service",
+    "services/factoring-service",
+    "services/payment-service",
+    "services/fuel-service",
+    "services/lockbox-service",
+    "services/reconciliation-service",
+    "services/ledger-service",
+    "services/accounting-service",
+    "shared/event-types",
+    "shared/auth-helpers",
+    "shared/validation",
+    "shared/logger",
+    "shared/error-taxonomy"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc -b tsconfig.json",
+    "build:watch": "tsc -b tsconfig.json -w",
+    "clean": "tsc -b tsconfig.json --clean",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.ts\"",
+    "start:all": "docker-compose up -d && yarn build && yarn workspace api-gateway start",
+    "start:infra": "docker-compose up -d",
+    "stop:infra": "docker-compose down",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "logs": "docker-compose logs -f"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

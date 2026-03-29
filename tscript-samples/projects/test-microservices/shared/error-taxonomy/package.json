@@ -1,0 +1,23 @@
+{
+  "name": "@ach-lockbox/error-taxonomy",
+  "version": "1.0.0",
+  "description": "Standard error types, HTTP status mapping, and error context enrichment",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "errors",
+    "taxonomy",
+    "http-status"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.0"
+  }
+}

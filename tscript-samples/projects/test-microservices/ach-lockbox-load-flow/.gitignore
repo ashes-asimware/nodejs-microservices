@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.yarn/build-state.yml
+.yarn/install-state.gz
+*.pnp
+*.pnp.js
+
+# Testing
+coverage/
+*.lcov
+
+# Build artifacts
+dist/
+build/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# Environment variables
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+pgadmin/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+docker-compose.override.yml
+.docker/

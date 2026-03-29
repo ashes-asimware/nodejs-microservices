@@ -1,0 +1,22 @@
+{
+  "name": "@ach-lockbox/event-types",
+  "version": "1.0.0",
+  "description": "Event envelope, schema definitions, and Kafka topic constants",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "event-sourcing",
+    "types",
+    "kafka"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
