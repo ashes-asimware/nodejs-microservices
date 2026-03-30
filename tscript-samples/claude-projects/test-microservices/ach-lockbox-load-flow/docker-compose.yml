@@ -1,0 +1,447 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Infrastructure Services
+  # ============================================================================
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka:29092,PLAINTEXT_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
+
+  # ============================================================================
+  # API Gateway
+  # ============================================================================
+
+  shared-components:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: shared-components
+    image: ach-lockbox/shared-components:local
+    container_name: shared-components
+    networks:
+      - ach-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: api-gateway-runtime
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      SERVICE_NAME: api-gateway
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      - shared-components
+      - load-service
+      - invoice-service
+      - payment-service
+    networks:
+      - ach-network
+
+  # ============================================================================
+  # Actor Simulator Services
+  # ============================================================================
+
+  carrier-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: carrier-simulator-runtime
+    container_name: carrier-simulator
+    ports:
+      - "3010:3010"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      SERVICE_NAME: carrier-simulator
+      API_GATEWAY_URL: http://api-gateway:3000
+    depends_on:
+      - shared-components
+      - kafka
+    networks:
+      - ach-network
+
+  factor-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: factor-simulator-runtime
+    container_name: factor-simulator
+    ports:
+      - "3011:3011"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      SERVICE_NAME: factor-simulator
+      API_GATEWAY_URL: http://api-gateway:3000
+    depends_on:
+      - shared-components
+      - kafka
+    networks:
+      - ach-network
+
+  broker-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: broker-simulator-runtime
+    container_name: broker-simulator
+    ports:
+      - "3012:3012"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      SERVICE_NAME: broker-simulator
+      API_GATEWAY_URL: http://api-gateway:3000
+    depends_on:
+      - shared-components
+      - kafka
+    networks:
+      - ach-network
+
+  bank-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: bank-simulator-runtime
+    container_name: bank-simulator
+    ports:
+      - "3013:3013"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      SERVICE_NAME: bank-simulator
+      API_GATEWAY_URL: http://api-gateway:3000
+    depends_on:
+      - shared-components
+      - kafka
+    networks:
+      - ach-network
+
+  # ============================================================================
+  # Core Domain Services
+  # ============================================================================
+
+  load-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: load-service-runtime
+    container_name: load-service
+    ports:
+      - "3020:3020"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: load-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  invoice-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: invoice-service-runtime
+    container_name: invoice-service
+    ports:
+      - "3021:3021"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: invoice-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  factoring-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: factoring-service-runtime
+    container_name: factoring-service
+    ports:
+      - "3022:3022"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: factoring-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: payment-service-runtime
+    container_name: payment-service
+    ports:
+      - "3023:3023"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: payment-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  fuel-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: fuel-service-runtime
+    container_name: fuel-service
+    ports:
+      - "3024:3024"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: fuel-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  lockbox-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: lockbox-service-runtime
+    container_name: lockbox-service
+    ports:
+      - "3025:3025"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: lockbox-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  reconciliation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: reconciliation-service-runtime
+    container_name: reconciliation-service
+    ports:
+      - "3026:3026"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379
+      SERVICE_NAME: reconciliation-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+      ML_CONFIDENCE_THRESHOLD: 0.85
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - ach-network
+
+  # ============================================================================
+  # Financial Infrastructure Services
+  # ============================================================================
+
+  ledger-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: ledger-service-runtime
+    container_name: ledger-service
+    ports:
+      - "3030:3030"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      SERVICE_NAME: ledger-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ach-network
+
+  accounting-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared-services
+      target: accounting-service-runtime
+    container_name: accounting-service
+    ports:
+      - "3031:3031"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      KAFKA_BROKER: kafka:29092
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379
+      SERVICE_NAME: accounting-service
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
+      JWT_ISSUER: ach-lockbox-platform
+    depends_on:
+      shared-components:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - ach-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ach-network:
+    driver: bridge

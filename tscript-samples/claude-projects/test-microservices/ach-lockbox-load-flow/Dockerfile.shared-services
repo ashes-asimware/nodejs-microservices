@@ -1,0 +1,95 @@
+# Shared build and runtime base for active services in docker-compose
+
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY services/*/package.json services/*/
+COPY shared/*/package.json shared/*/
+RUN npm ci
+
+FROM deps AS builder
+COPY tsconfig.json ./
+COPY shared ./shared
+COPY services ./services
+RUN npm run build
+
+FROM node:20-alpine AS shared-components
+WORKDIR /app
+ENV NODE_ENV=development
+
+COPY package.json package-lock.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/shared ./shared
+
+CMD ["sh", "-c", "echo 'shared components image ready' && tail -f /dev/null"]
+
+FROM shared-components AS api-gateway-runtime
+COPY --from=builder /app/services/api-gateway ./services/api-gateway
+EXPOSE 3000
+CMD ["node", "services/api-gateway/dist/index.js"]
+
+FROM shared-components AS load-service-runtime
+COPY --from=builder /app/services/load-service ./services/load-service
+EXPOSE 3020
+CMD ["node", "services/load-service/dist/index.js"]
+
+FROM shared-components AS invoice-service-runtime
+COPY --from=builder /app/services/invoice-service ./services/invoice-service
+EXPOSE 3021
+CMD ["node", "services/invoice-service/dist/index.js"]
+
+FROM shared-components AS payment-service-runtime
+COPY --from=builder /app/services/payment-service ./services/payment-service
+EXPOSE 3023
+CMD ["node", "services/payment-service/dist/index.js"]
+
+FROM shared-components AS reconciliation-service-runtime
+COPY --from=builder /app/services/reconciliation-service ./services/reconciliation-service
+EXPOSE 3026
+CMD ["node", "services/reconciliation-service/dist/index.js"]
+
+FROM shared-components AS carrier-simulator-runtime
+COPY --from=builder /app/services/carrier-simulator ./services/carrier-simulator
+EXPOSE 3010
+CMD ["node", "services/carrier-simulator/dist/index.js"]
+
+FROM shared-components AS factor-simulator-runtime
+COPY --from=builder /app/services/factor-simulator ./services/factor-simulator
+EXPOSE 3011
+CMD ["node", "services/factor-simulator/dist/index.js"]
+
+FROM shared-components AS broker-simulator-runtime
+COPY --from=builder /app/services/broker-simulator ./services/broker-simulator
+EXPOSE 3012
+CMD ["node", "services/broker-simulator/dist/index.js"]
+
+FROM shared-components AS bank-simulator-runtime
+COPY --from=builder /app/services/bank-simulator ./services/bank-simulator
+EXPOSE 3013
+CMD ["node", "services/bank-simulator/dist/index.js"]
+
+FROM shared-components AS factoring-service-runtime
+COPY --from=builder /app/services/factoring-service ./services/factoring-service
+EXPOSE 3022
+CMD ["node", "services/factoring-service/dist/index.js"]
+
+FROM shared-components AS fuel-service-runtime
+COPY --from=builder /app/services/fuel-service ./services/fuel-service
+EXPOSE 3024
+CMD ["node", "services/fuel-service/dist/index.js"]
+
+FROM shared-components AS lockbox-service-runtime
+COPY --from=builder /app/services/lockbox-service ./services/lockbox-service
+EXPOSE 3025
+CMD ["node", "services/lockbox-service/dist/index.js"]
+
+FROM shared-components AS ledger-service-runtime
+COPY --from=builder /app/services/ledger-service ./services/ledger-service
+EXPOSE 3030
+CMD ["node", "services/ledger-service/dist/index.js"]
+
+FROM shared-components AS accounting-service-runtime
+COPY --from=builder /app/services/accounting-service ./services/accounting-service
+EXPOSE 3031
+CMD ["node", "services/accounting-service/dist/index.js"]

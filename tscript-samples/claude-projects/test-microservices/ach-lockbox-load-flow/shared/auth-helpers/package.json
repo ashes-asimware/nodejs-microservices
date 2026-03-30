@@ -1,0 +1,24 @@
+{
+  "name": "@ach-lockbox/auth-helpers",
+  "version": "1.0.0",
+  "description": "JWT middleware, RBAC policies, and authentication utilities",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": ["jwt", "rbac", "authentication"],
+  "dependencies": {
+    "@ach-lockbox/error-taxonomy": "^1.0.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.0"
+  }
+}
+
