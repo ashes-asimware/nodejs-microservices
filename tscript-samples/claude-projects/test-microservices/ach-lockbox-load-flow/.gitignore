@@ -57,3 +57,6 @@ temp/
 # Docker
 docker-compose.override.yml
 .docker/
+
+# Claude
+.claude/
