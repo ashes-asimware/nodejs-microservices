@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"where gh\")",
+      "Read(//c//**)",
+      "Read(//c/Users/ashes/AppData/Local/**)"
+    ]
+  }
+}
