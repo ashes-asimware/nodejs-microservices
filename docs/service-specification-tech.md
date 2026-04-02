@@ -16,4 +16,4 @@
 Validate, submit Entity 1 from App and emit event if successful.
 
 **2. Entity 2 Submission**  
-Validaiton and submission of Entity 2 and matching of entity parts for reconciliation
+Validation and submission of Entity 2 and matching of entity parts for reconciliation
