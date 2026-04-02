@@ -10,7 +10,7 @@
 | **D** | Event‑Sink D | Entity submission |
 | **E** | Engine E | Matching engine |
 
-## 2. Textual Descriptions of All  Activities
+## 2. Textual Descriptions of Sample Activities
 
 **1. Entity 1 Creation**  
 Validate, submit Entity 1 from App and emit event if successful.
