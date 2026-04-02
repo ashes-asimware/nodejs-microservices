@@ -1,21 +1,3 @@
 {
-  "permissions": {
-    "allow": [
-      "mcp__Claude_Preview__preview_start",
-      "Bash(WORKTREE=\"/c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black\")",
-      "Bash(__NEW_LINE_d4ff481f10c375fc__ echo:*)",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/tscript-samples/projects/**)",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/tscript-samples/claude-projects/**)",
-      "Bash(__NEW_LINE_c7a1c10018ca26c0__ echo:*)",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/tscript-samples/projects/test-microservices/**)",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/tscript-samples/projects/test-microservices/ach-lockbox-load-flow/**)",
-      "Bash(WORKTREE=\"/c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black\" cd \"$WORKTREE\" git show --stat HEAD --diff-filter=A)",
-      "Bash(WORKTREE=\"/c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black\" cd \"$WORKTREE\" git show --name-only HEAD)",
-      "Bash(WORKTREE=/c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black __NEW_LINE_0392683e3a55f676__ echo '=== .gitignore at repo root ===' cat $WORKTREE/.gitignore)",
-      "Bash(echo \"\\(none\\)\" __NEW_LINE_0392683e3a55f676__ echo \"\" echo \"=== git status for claude-projects path ===\" cd \"$WORKTREE\")",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/**)",
-      "Read(//c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black/$WORKTREE/tscript-samples/**)",
-      "Bash(WORKTREE=\"/c/repos/nodejs-microservices/tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow/.claude/worktrees/jolly-black\" cd \"$WORKTREE\" __NEW_LINE_2f6834fcb0640338__ mkdir -p tscript-samples/claude-projects/test-microservices git mv tscript-samples/projects/test-microservices/ach-lockbox-load-flow tscript-samples/claude-projects/test-microservices/ach-lockbox-load-flow __NEW_LINE_2f6834fcb0640338__ git status --short)"
-    ]
-  }
+  "comment": "Empty contents"
 }
