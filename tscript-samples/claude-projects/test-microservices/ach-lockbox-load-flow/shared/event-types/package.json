@@ -11,7 +11,7 @@
   },
   "keywords": ["event-sourcing", "types", "kafka"],
   "dependencies": {
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.7",
