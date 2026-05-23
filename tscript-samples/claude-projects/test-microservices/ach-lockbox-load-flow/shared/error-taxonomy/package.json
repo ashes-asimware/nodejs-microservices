@@ -11,7 +11,7 @@
   },
   "keywords": ["errors", "taxonomy", "http-status"],
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.22.2",
     "@ach-lockbox/logger": "^1.0.0"
   },
   "devDependencies": {

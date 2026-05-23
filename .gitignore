@@ -142,3 +142,6 @@ asyncprogramming/data/*
 
 # Exclusions
 docs/backup/*.md
+
+#Claude exclusions
+.claude/*
